@@ -1,0 +1,42 @@
+[
+    {
+        "position": [
+            0.0,
+            -100.0
+        ],
+        "type": "Box",
+        "name": "Box 1",
+        "parameters": {
+            "Subdive": 4,
+            "Size": 2
+        },
+        "inputs": []
+    },
+    {
+        "position": [
+            50.0,
+            -50.0
+        ],
+        "type": "Smooth",
+        "name": "Smooth 1",
+        "parameters": {
+            "Lvl": 2
+        },
+        "inputs": [
+            "Box 1"
+        ]
+    },
+    {
+        "position": [
+            0.0,
+            0.0
+        ],
+        "type": "Merge",
+        "name": "Merge 1",
+        "parameters": {},
+        "inputs": [
+            "Box 1",
+            "Smooth 1"
+        ]
+    }
+]

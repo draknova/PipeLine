@@ -1,0 +1,126 @@
+#! /Applications/Nuke8.0v6/Nuke8.0v6.app/Contents/MacOS/libnuke-8.0.v6.dylib -nx
+version 8.0 v6
+define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
+<layout version="1.0">
+    <window x="0" y="23" w="1680" h="1023" screen="0">
+        <splitter orientation="1">
+            <split size="1062"/>
+            <splitter orientation="1">
+                <split size="40"/>
+                <dock id="" hideTitles="1" activePageId="Toolbar.1">
+                    <page id="Toolbar.1"/>
+                </dock>
+                <split size="1018"/>
+                <splitter orientation="2">
+                    <split size="585"/>
+                    <dock id="" activePageId="Viewer.1">
+                        <page id="Viewer.1"/>
+                    </dock>
+                    <split size="412"/>
+                    <dock id="" activePageId="DAG.1">
+                        <page id="DAG.1"/>
+                        <page id="Curve Editor.1"/>
+                        <page id="DopeSheet.1"/>
+                    </dock>
+                </splitter>
+            </splitter>
+            <split size="614"/>
+            <dock id="" activePageId="Properties.1">
+                <page id="Properties.1"/>
+            </dock>
+        </splitter>
+    </window>
+</layout>
+}
+Root {
+ inputs 0
+ name /Users/draknova/Documents/workspace/sPipe/bin/images/gridTexture.nk
+ format "120 60 0 0 120 60 1 GridTexture"
+ proxy_type scale
+ proxy_format "1024 778 0 0 1024 778 1 1K_Super_35(full-ap)"
+}
+Constant {
+ inputs 0
+ channels rgb
+ color 0.02
+ format "256 256 0 0 256 256 1 square_256"
+ name Constant2
+ xpos 76
+ ypos -167
+}
+set N1a89a0 [stack 0]
+Transform {
+ translate {0 0}
+ scale {0.005 0.06}
+ center {128 128}
+ name Transform1
+ xpos 76
+ ypos -95
+}
+push $N1a89a0
+Transform {
+ scale {{parent.Transform1.scale.h} {parent.Transform1.scale.w}}
+ center {128 128}
+ name Transform2
+ xpos 189
+ ypos -93
+}
+Merge2 {
+ inputs 2
+ name Merge2
+ xpos 136
+ ypos -41
+}
+Transform {
+ translate {-128 -128}
+ center {128 128}
+ name Transform3
+ xpos 136
+ ypos -17
+}
+Transform {
+ translate {{parent.NoOp1.transform.x} {parent.NoOp1.transform.y}}
+ center {128 128}
+ name Transform4
+ xpos 136
+ ypos 7
+}
+Constant {
+ inputs 0
+ channels rgb
+ color 0.01
+ name Constant1
+ xpos -50
+ ypos -140
+}
+NoOp {
+ name NoOp1
+ xpos -46
+ ypos -44
+ addUserKnob {20 User}
+ addUserKnob {12 transform l Transform}
+ transform {{format.width/2} {format.height/2}}
+}
+Merge2 {
+ inputs 2
+ name Merge1
+ xpos -50
+ ypos 10
+}
+Write {
+ file /Users/draknova/Documents/workspace/sPipe/bin/images/gridTexture.jpg
+ file_type jpeg
+ _jpeg_quality 100
+ checkHashOnRead false
+ version 5
+ name Write1
+ xpos -50
+ ypos 34
+}
+Viewer {
+ frame 1
+ input_process false
+ name Viewer1
+ xpos -50
+ ypos 133
+}
