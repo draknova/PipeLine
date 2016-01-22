@@ -4,20 +4,19 @@ import os
 
 from PySide import QtCore, QtGui
 
+from sPipe.scene import OPScene
 from sPipe.node import *
 from sPipe.connection import *
 import sPipe.pCore as pc
 from sPipe.panel.ParameterPanel import ParameterPanel
 
 
-
 # Main Widget :: Node editor
 # Containt the Node View, menu bar and buttons
-class NodePanel(QtGui.QWidget):
+class QNodePanel(QtGui.QWidget):
     def __init__(self):
-        super(NodePanel,self).__init__()
-        self.nodeList=list()
-        
+        super(QNodePanel,self).__init__()
+
         self._parameterPanel = None
         
         self.initUI()      
@@ -45,7 +44,7 @@ class NodePanel(QtGui.QWidget):
         self._layout.addWidget(self._parameterPanel,1,1)
         
         
-        self.openFile("/Users/draknova/Documents/workspace/sPipe/sPipe/_tests/job_01.json")
+        self.openFile("/Users/draknova/Documents/workspace/sPipe/sPipe/OLD_tests/job_01.json")
 
     def createMenuBar(self):
         self._menu = QtGui.QMenuBar(self)
@@ -102,7 +101,7 @@ class NodePanel(QtGui.QWidget):
             for inputName in node['inputs']:
                 # Look for the node with that name
                 for existingNode in self.view.items():
-                    if type(existingNode) == Node:
+                    if type(existingNode) == QNode:
                         if existingNode.name() == inputName:
                             n.addInput(existingNode)
 
@@ -138,45 +137,55 @@ class NodePanel(QtGui.QWidget):
 class NodeView(QtGui.QGraphicsView):
     def __init__(self):
         super(NodeView,self).__init__()
+        self._scene = OPScene()
         
+        # Obsolete
         self.nodeList = list()
+        
+        # Variables
         self.clickedItem = None
         self.itemMode = None        # Define which item is selected
+
+        self.mousePositionX = 0
+        self.mousePositionY = 0
         
         self.mode = None
         
+        # Configure QGraphics View
+        self.setSceneRect(0, 0, -1, -1)
+        self.setFocusPolicy(QtCore.Qt.ClickFocus)
+        self.setMouseTracking(True)
         self.setRenderHints(QtGui.QPainter.Antialiasing)
         self.setViewportUpdateMode(QtGui.QGraphicsView.FullViewportUpdate)
         
+        # Init QGraphic Scene
         self.sc = QtGui.QGraphicsScene()
         self.setScene(self.sc)
         self.sceneScale = 0.7
         
+        # Paint the background
         brush = QtGui.QBrush()
-        brush.setTransform(QtGui.QTransform().scale(0.75,0.75))
+        brush.setTransform(QtGui.QTransform().scale(0.75, 0.75))
         brush.setTextureImage(QtGui.QImage("/Users/draknova/Documents/workspace/sPipe/bin/images/gridTexture.jpg"))
         self.sc.setBackgroundBrush(brush)
-        
-        self.setSceneRect(0,0,-1,-1)
-        self.setFocusPolicy(QtCore.Qt.ClickFocus)
-                
-        self.setMouseTracking(True)
-        self.mousePositionX = 0
-        self.mousePositionY = 0
+
+
+    ######################
+    ####### EVENTS #######
+    ######################
     
-    # EVENTS
+    ### KEYBOARD EVENTS ##
     def keyReleaseEvent(self,event):
         if event.key() == QtCore.Qt.Key_Space:
             self.createNodeMenu()
             #node = self.createNode("Null")
             #node.setPos(self.mapToScene(self.mapFromGlobal(QtGui.QCursor.pos())))
-            
         elif event.key() == QtCore.Qt.Key_Backspace:
             self.deleteNodes()
             
         elif event.key() == QtCore.Qt.Key_H:
             self.redifinePositions()
-    
+            
         elif event.key() == QtCore.Qt.Key_L:
             for item in self.sc.items():
                 print item
@@ -184,6 +193,7 @@ class NodeView(QtGui.QGraphicsView):
         elif event.key() == QtCore.Qt.Key_Escape:
             self.mode = None
     
+    ### MOUSE EVENTS ######
     def mousePressEvent(self,event):
         self.previousClickedItem = self.clickedItem
         self.clickedItem = self.itemAt(event.pos())
@@ -194,7 +204,7 @@ class NodeView(QtGui.QGraphicsView):
         self.mouseClickedPositionY = self.mousePositionY
         
         if event.button() == QtCore.Qt.LeftButton:
-            if type(self.clickedItem) == Node:
+            if type(self.clickedItem) == QNode:
                 self.mode = "selection"
                 self.selection(event)
             elif type(self.clickedItem) == Connector:
@@ -217,7 +227,6 @@ class NodeView(QtGui.QGraphicsView):
             for item in self.scene().items():
                 if type(item) == Node:
                     item.setSelected(False)
-        
     
     def mouseDoubleClickEvent(self,event):
         if event.button() == QtCore.Qt.LeftButton:
@@ -251,7 +260,7 @@ class NodeView(QtGui.QGraphicsView):
             if event.buttons() == QtCore.Qt.LeftButton:
                 if self.mode == "selection":
                     for item in self.sc.selectedItems():
-                        if type(item) == Node:
+                        if type(item) == QNode:
                             posx = item.pos().x() - movex
                             posy = item.pos().y() - movey
                             item.setPos(posx,posy)
@@ -265,7 +274,6 @@ class NodeView(QtGui.QGraphicsView):
                         for item in self.sc.selectedItems():
                             item.setSelected(False)
     
-        
         self.mousePositionX = x
         self.mousePositionY = y
     
@@ -276,6 +284,9 @@ class NodeView(QtGui.QGraphicsView):
         self.scale(sceneScale,sceneScale)
         
 
+
+    #### SCENE MANIPULATION ##
+    
     # Set selection based on modifiers
     def selection(self,event):
         clickPos = self.mapToScene(event.pos())
@@ -286,7 +297,7 @@ class NodeView(QtGui.QGraphicsView):
                 #if type(item) == Node:
                 item.setSelected(False)
         
-        if type(clickedItem) == Node:
+        if type(clickedItem) == QNode:
             if event.modifiers() == QtCore.Qt.CTRL:
                 clickedItem.setSelected(False)
             else:
@@ -348,7 +359,7 @@ class NodeView(QtGui.QGraphicsView):
         print "Menu"
     
     def createNode(self, nodeType, nodeName="NewNode"):
-        n = Node(nodeType)
+        n = QNode(nodeType)
         self.scene().addItem(n)
         n.setName(nodeName)
         
@@ -439,7 +450,7 @@ def main():
     s = f.read()
     f.close()
     app.setStyleSheet(s)
-    ui = NodePanel()
+    ui = QNodePanel()
     ui.setGeometry(0,0,600,400)
     ui.show()
     sys.exit(app.exec_())

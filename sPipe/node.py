@@ -3,11 +3,11 @@ from sPipe.connection import *
 from sPipe.parameter import *
 import json
 
-
-class Node():
+class OPNode():
     def __init__(self, **kwargs):
         self._name =  kwargs['name'] if 'name' in kwargs.keys() else None
         self._type =  kwargs['type'] if 'type' in kwargs.keys() else "Null"
+        self._parmTemplateGroup = ParameterTemplateGroup()
         self._inputs = list()
         self._position = [0,0]
         
@@ -16,11 +16,6 @@ class Node():
         for v in vars(self):
             d[v[1:]] = eval("self.%s"%(v))
         return str(d)
-        
-
-class OPNode():
-    def __init__(self, **kwargs):
-        self._parmTemplateGroup = ParameterTemplateGroup()
 
     def parmTemplateGroup(self):
         return self._parmTemplateGroup
@@ -29,9 +24,9 @@ class OPNode():
         self._parmTemplateGroup = newParmTemplateGroup
 
 
-class NodeUI(QtGui.QGraphicsItem):
+class QNode(QtGui.QGraphicsItem):
     def __init__(self, _nodeType, name=""):
-        super(Node,self).__init__()
+        super(QNode,self).__init__()
 
         self._name=name
         self._nodeType=_nodeType
@@ -68,8 +63,9 @@ class NodeUI(QtGui.QGraphicsItem):
 
     def setParameters(self,paramerterDict):
         for parameterName in paramerterDict.keys():
-            p = Parameter(parameterName, paramerterDict[parameterName])
-            self._parameters.append(p)
+            #p = Parameter(parameterName, paramerterDict[parameterName])
+            #self._parameters.append(p)
+            pass
         
     def parameters(self):
         return self._parameters
@@ -84,7 +80,7 @@ class NodeUI(QtGui.QGraphicsItem):
     def checkForUniqueName(self,newName):
         if self.scene() != None:
             for node in self.scene().items():
-                if type(node) == Node:
+                if type(node) == QNode:
                     if newName == node.name():
                         for i in range(1,len(newName)):
                             if not newName[-i:].isdigit():
@@ -95,7 +91,7 @@ class NodeUI(QtGui.QGraphicsItem):
                                 break
     
             for node in self.scene().items():
-                if type(node) == Node:
+                if type(node) == QNode:
                     if newName == node.name():
                         newName = self.checkForUniqueName(newName)
         return newName
@@ -113,7 +109,7 @@ class NodeUI(QtGui.QGraphicsItem):
         return outputNodes
     
     def addInput(self,newInput):
-        if type(newInput) == Node:
+        if type(newInput) == QNode:
             newConnection = Connection(newInput,self)
             self._inputs.append(newConnection)
             newInput.addOutput(newConnection)
@@ -128,7 +124,7 @@ class NodeUI(QtGui.QGraphicsItem):
             return False
 
     def addOutput(self,newOutput):
-        if type(newOutput) == Node:
+        if type(newOutput) == QNode:
             newConnection = Connection(self,newOutput)
             self._outputs.append(newConnection)
             newOutput.addInput(newConnection)
