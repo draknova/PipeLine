@@ -6,7 +6,6 @@ Graphic Element to connect elements together
 """
 
 from PySide import QtCore, QtGui
-from matplotlib.font_manager import path
 
 class Connection(QtGui.QGraphicsItem):
     def __init__(self, inputNode, outputNode):
