@@ -3,26 +3,164 @@ from sPipe.connection import *
 from sPipe.parameter import *
 import json
 
-class OPNode():
-    def __init__(self, **kwargs):
-        self._name =  kwargs['name'] if 'name' in kwargs.keys() else None
-        self._type =  kwargs['type'] if 'type' in kwargs.keys() else "Null"
-        self._parmTemplateGroup = ParameterTemplateGroup()
-        self._inputs = list()
-        self._position = [0,0]
+
+class Node():
+    """Basic level for connecting graphical functions together"""
+    
+    def __init__(self, name='node', type='Null', inputs=[], outputs=[]):
+        """
+        Keyword arguments:
+        name -- Name must be unique
+        type -- Define the ParameterTemplate to use
+        inputs -- List of node connected as input
+        outputs -- List of node connected as output
+        """
+        
+        # Globals
+        self.__name =  name
+        self.__type =  type
+        self.__parmTemplateGroup = ParameterTemplateGroup()
+        
+        # NF
+        self.__position = [0,0]
+        
+        # Status
+        self.__locked = False
+        self.__bypass = False
+        
+        # Hierachy
+        self.__parent = None
+        self.__inputs = inputs
+        self.__ouputs = outputs
+        self.__children = list()
         
     def __str__(self):
+        return self.name()
+        
+    def __str2__(self):
+        """Return the node as dict string"""
         d = dict()
         for v in vars(self):
-            d[v[1:]] = eval("self.%s"%(v))
+            d[v[7:]] = eval("self.%s"%(v))
         return str(d)
 
     def parmTemplateGroup(self):
-        return self._parmTemplateGroup
+        """Return the parmTemplateGroup Object"""
+        return self.__parmTemplateGroup
     
     def setParmTemplateGroup(self, newParmTemplateGroup):
-        self._parmTemplateGroup = newParmTemplateGroup
+        """
+        Keyword arguments:
+        newParmTemplateGroup -- ParmTemplateGroup Object
+        """
+        self.__parmTemplateGroup = newParmTemplateGroup
 
+    def name(self):
+        """Return the name of the node"""
+        return self.__name
+    
+    def setName(self, newName):
+        """
+        Keyword arguments:
+        newName -- Node new name
+        
+        Return new name
+        """
+        newName = str(newName)
+        while newName in map(lambda x: x.name(), filter(lambda y : y != self, self.parent().children())):
+            v = reduce(lambda x, y: y + x if y.isdigit() else x, newName[::-1])
+            try:
+                newName = newName.replace( v, str(int(v) + 1))
+            except:
+                newName += str(1)
+        self.__name = newName
+        return self.__name
+        
+    def position(self):
+        """Return node position"""
+        return self.__position
+    
+    def setPosition(self, newPosition):
+        """
+        Keyword arguments:
+        newPosition -- Node new position
+        """
+        self.__position = newPosition
+
+    def children(self):
+        """Return list of children Node Object"""
+        return self.__children
+
+    def addChild(self, newChild):
+        """Add new children"""
+        if isinstance(newChild, Node):
+            if newChild not in self.__children:
+                self.__children.append(newChild)
+            newChild.setParent(self)
+            newChild.setName( newChild.name() )
+        else:
+            print("%s is not a Node Object" % (newChild))
+
+    def addChildren(self, newChild):
+        """Add new children"""
+        map(lambda x : self.addChild(x), newChild)
+        
+    def allSubChildren(self):
+        """Return list of all the sub children Node Object"""
+        childrenList = list()
+        for child in self.children():
+            childrenList.append(child)
+            childrenList += child.allSubChildren()
+        return childrenList
+    
+    def parent(self):
+        """Return parent Node Object"""
+        return self.__parent
+    
+    def setParent(self, newParent):
+        """
+        Keyword arguments:
+        newParent -- New parent Node Object
+        """
+        self.__parent = newParent
+
+    def path(self):
+        """Return Node Object path"""
+        fullPath = self.parent().path() if self.parent() != None else ""
+        fullPath += "/" + self.name()
+        return fullPath
+    
+    def inputs(self):
+        """Return list of input Nodes Object"""
+        return self.__inputs
+    
+    def setInput(self, index, node):
+        """
+        Keyword arguments:
+        index -- Input slot Interger (first is 0)
+        node -- Node to connect as input
+        """
+        if isinstance(node, Node):
+            if index >= 0 and index >= len(self.__inputs):
+                self.__inputs.append(node)
+            elif index < 0 and abs(index) >= len(self.__inputs):
+                self.__inputs.insert(0, node)
+            else:
+                self.__inputs[index] = node
+        else:
+            print("Error : %s is not a Node Object" % (node))
+
+p = Node(name='obj')
+n1 = Node(name='n1')
+n2 = Node(name='n2')
+n3 = Node(name='n3')
+n4 = Node(name='n4')
+p.addChildren([n1,n2,n3])
+n3.addChild(n4)
+
+
+#print map(lambda x : x.name(), p.allSubChildren())
+print n4.path()
 
 class QNode(QtGui.QGraphicsItem):
     def __init__(self, _nodeType, name=""):
